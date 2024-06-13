@@ -270,7 +270,7 @@ pub trait PolynomialCommitment<F: PrimeField, P: Polynomial<F>, S: Cryptographic
         let poly_st_comm: BTreeMap<_, _> = labeled_polynomials
             .into_iter()
             .zip(states)
-            .zip(commitments.into_iter())
+            .zip(commitments)
             .map(|((poly, st), comm)| (poly.label(), (poly, st, comm)))
             .collect();
 
@@ -324,7 +324,7 @@ pub trait PolynomialCommitment<F: PrimeField, P: Polynomial<F>, S: Cryptographic
                 ck,
                 query_polys,
                 query_comms,
-                &point,
+                point,
                 sponge,
                 query_states,
                 Some(rng),
@@ -416,7 +416,7 @@ pub trait PolynomialCommitment<F: PrimeField, P: Polynomial<F>, S: Cryptographic
 
             // Verify all proofs referring to the current point simultaneously
             // with a single call to `check`
-            result &= Self::check(vk, comms, &point, values, &proof, sponge, Some(rng))?;
+            result &= Self::check(vk, comms, point, values, &proof, sponge, Some(rng))?;
             end_timer!(proof_time);
         }
         Ok(result)
@@ -521,7 +521,7 @@ pub trait PolynomialCommitment<F: PrimeField, P: Polynomial<F>, S: Cryptographic
                     let eval = match label {
                         LCTerm::One => F::one(),
                         LCTerm::PolyLabel(l) => *poly_evals
-                            .get(&(l.clone().into(), point.clone()))
+                            .get(&(l.clone(), point.clone()))
                             .ok_or(Error::MissingEvaluation {
                                 label: format!("{}-{:?}", l.clone(), point.clone()),
                             })?,
@@ -577,7 +577,7 @@ where
         let poly = polys
             .get(label)
             .expect("polynomial in evaluated lc is not found");
-        let eval = poly.evaluate(&point);
+        let eval = poly.evaluate(point);
         evaluations.insert((label.clone(), point.clone()), eval);
     }
     evaluations
@@ -811,7 +811,7 @@ pub mod tests {
 
                 polynomials.push(LabeledPolynomial::new(
                     label,
-                    rand_poly(degree, num_vars, rng).into(),
+                    rand_poly(degree, num_vars, rng),
                     degree_bound,
                     hiding_bound,
                 ))
@@ -828,7 +828,7 @@ pub mod tests {
                 &pp,
                 supported_degree,
                 supported_hiding_bound,
-                degree_bounds.as_ref().map(|s| s.as_slice()),
+                degree_bounds.as_deref(),
             )?;
             println!("Trimmed");
 
@@ -972,7 +972,7 @@ pub mod tests {
                 &pp,
                 supported_degree,
                 supported_degree,
-                degree_bounds.as_ref().map(|s| s.as_slice()),
+                degree_bounds.as_deref(),
             )?;
             println!("Trimmed");
 

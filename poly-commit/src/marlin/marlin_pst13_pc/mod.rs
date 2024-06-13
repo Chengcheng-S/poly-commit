@@ -71,7 +71,7 @@ impl<E: Pairing, P: DenseMVPolynomial<E::ScalarField>, S: CryptographicSponge>
                 }
                 // If the current term contains `X_i` then divide appropiately,
                 // otherwise add it to the remainder
-                let mut term_vec = (&*term).to_vec();
+                let mut term_vec = term.to_vec();
                 match term_vec.binary_search_by(|(var, _)| var.cmp(&i)) {
                     Ok(idx) => {
                         // Repeatedly divide the term by `X_i - z_i` until the remainder
@@ -136,10 +136,9 @@ impl<E: Pairing, P: DenseMVPolynomial<E::ScalarField>, S: CryptographicSponge>
 
     /// Convert polynomial coefficients to `BigInt`
     fn convert_to_bigints(p: &P) -> Vec<<E::ScalarField as PrimeField>::BigInt> {
-        let plain_coeffs = ark_std::cfg_into_iter!(p.terms())
+        ark_std::cfg_into_iter!(p.terms())
             .map(|(coeff, _)| coeff.into_bigint())
-            .collect();
-        plain_coeffs
+            .collect()
     }
 }
 
@@ -247,10 +246,7 @@ where
         let prepared_beta_h = beta_h.iter().map(|bh| (*bh).into()).collect();
 
         // Convert `powers_of_g` to a BTreeMap indexed by `powers_of_beta_terms`
-        let powers_of_g = powers_of_beta_terms
-            .into_iter()
-            .zip(powers_of_g.into_iter())
-            .collect();
+        let powers_of_g = powers_of_beta_terms.into_iter().zip(powers_of_g).collect();
 
         let pp = UniversalParams {
             num_vars,
@@ -292,7 +288,7 @@ where
             .powers_of_g
             .iter()
             .filter(|(k, _)| k.degree() <= supported_degree)
-            .map(|(k, v)| (k.clone(), v.clone()))
+            .map(|(k, v)| (k.clone(), *v))
             .collect();
         let powers_of_gamma_g = pp
             .powers_of_gamma_g
@@ -347,7 +343,7 @@ where
             let label = p.label();
             let hiding_bound = p.hiding_bound();
             let polynomial: &P = p.polynomial();
-            Self::check_degrees_and_bounds(ck.supported_degree, &p)?;
+            Self::check_degrees_and_bounds(ck.supported_degree, p)?;
 
             let commit_time = start_timer!(|| {
                 format!(
@@ -363,7 +359,7 @@ where
                 .collect::<Vec<_>>();
             // Convert coefficients of `polynomial` to BigInts
             let to_bigint_time = start_timer!(|| "Converting polynomial coeffs to bigints");
-            let plain_ints = Self::convert_to_bigints(&polynomial);
+            let plain_ints = Self::convert_to_bigints(polynomial);
             end_timer!(to_bigint_time);
 
             let msm_time = start_timer!(|| "MSM to compute commitment to plaintext poly");
@@ -442,7 +438,7 @@ where
         let mut p = P::zero();
         let mut r = Randomness::empty();
         for (polynomial, state) in labeled_polynomials.into_iter().zip(states) {
-            Self::check_degrees_and_bounds(ck.supported_degree, &polynomial)?;
+            Self::check_degrees_and_bounds(ck.supported_degree, polynomial)?;
 
             // compute challenge^j and challenge^{j+1}.
             let challenge_j = sponge.squeeze_field_elements_with_sizes(&[CHALLENGE_SIZE])[0];
@@ -470,7 +466,7 @@ where
                     .map(|(_, term)| *ck.powers_of_g.get(term).unwrap())
                     .collect::<Vec<_>>();
                 // Convert coefficients to BigInt
-                let witness_ints = Self::convert_to_bigints(&w);
+                let witness_ints = Self::convert_to_bigints(w);
                 // Compute MSM
                 <E::G1 as VariableBaseMSM>::msm_bigint(&powers_of_g, &witness_ints)
             })

@@ -69,7 +69,7 @@ pub fn commit<
         LabeledPolynomial::new("test".to_string(), rand_poly(num_vars, rng), None, None);
 
     let start = Instant::now();
-    let (_, _) = PCS::commit(&ck, [&labeled_poly], Some(rng)).unwrap();
+    let (_, _) = PCS::commit(ck, [&labeled_poly], Some(rng)).unwrap();
     start.elapsed()
 }
 
@@ -114,12 +114,12 @@ where
     let labeled_poly =
         LabeledPolynomial::new("test".to_string(), rand_poly(num_vars, rng), None, None);
 
-    let (coms, states) = PCS::commit(&ck, [&labeled_poly], Some(rng)).unwrap();
+    let (coms, states) = PCS::commit(ck, [&labeled_poly], Some(rng)).unwrap();
     let point = P::Point::rand(rng);
 
     let start = Instant::now();
     let _ = PCS::open(
-        &ck,
+        ck,
         [&labeled_poly],
         &coms,
         &point,
@@ -185,11 +185,11 @@ where
     let labeled_poly =
         LabeledPolynomial::new("test".to_string(), rand_poly(num_vars, rng), None, None);
 
-    let (coms, states) = PCS::commit(&ck, [&labeled_poly], Some(rng)).unwrap();
+    let (coms, states) = PCS::commit(ck, [&labeled_poly], Some(rng)).unwrap();
     let point = P::Point::rand(rng);
     let claimed_eval = labeled_poly.evaluate(&point);
     let proof = PCS::open(
-        &ck,
+        ck,
         [&labeled_poly],
         &coms,
         &point,
@@ -201,7 +201,7 @@ where
 
     let start = Instant::now();
     PCS::check(
-        &vk,
+        vk,
         &coms,
         &point,
         [claimed_eval],

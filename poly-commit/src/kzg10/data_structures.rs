@@ -94,8 +94,8 @@ impl<E: Pairing> CanonicalDeserialize for UniversalParams<E> {
         let beta_h = E::G2Affine::deserialize_with_mode(&mut reader, compress, Validate::No)?;
         let neg_powers_of_h = BTreeMap::deserialize_with_mode(&mut reader, compress, Validate::No)?;
 
-        let prepared_h = E::G2Prepared::from(h.clone());
-        let prepared_beta_h = E::G2Prepared::from(beta_h.clone());
+        let prepared_h = E::G2Prepared::from(h);
+        let prepared_beta_h = E::G2Prepared::from(beta_h);
         let result = Self {
             powers_of_g,
             powers_of_gamma_g,
@@ -245,8 +245,8 @@ impl<E: Pairing> CanonicalDeserialize for VerifierKey<E> {
         let h = E::G2Affine::deserialize_with_mode(&mut reader, compress, Validate::No)?;
         let beta_h = E::G2Affine::deserialize_with_mode(&mut reader, compress, Validate::No)?;
 
-        let prepared_h = E::G2Prepared::from(h.clone());
-        let prepared_beta_h = E::G2Prepared::from(beta_h.clone());
+        let prepared_h = E::G2Prepared::from(h);
+        let prepared_beta_h = E::G2Prepared::from(beta_h);
         let result = Self {
             g,
             gamma_g,
@@ -299,9 +299,9 @@ impl<E: Pairing> PreparedVerifierKey<E> {
         let supported_bits = E::ScalarField::MODULUS_BIT_SIZE as usize;
 
         let mut prepared_g = Vec::<E::G1Affine>::new();
-        let mut g = E::G1::from(vk.g.clone());
+        let mut g = E::G1::from(vk.g);
         for _ in 0..supported_bits {
-            prepared_g.push(g.clone().into());
+            prepared_g.push(g.into());
             g.double_in_place();
         }
 
@@ -377,16 +377,16 @@ impl<E: Pairing> PreparedCommitment<E> {
     /// prepare `PreparedCommitment` from `Commitment`
     pub fn prepare(comm: &Commitment<E>) -> Self {
         let mut prepared_comm = Vec::<E::G1Affine>::new();
-        let mut cur = E::G1::from(comm.0.clone());
+        let mut cur = E::G1::from(comm.0);
 
         let supported_bits = E::ScalarField::MODULUS_BIT_SIZE as usize;
 
         for _ in 0..supported_bits {
-            prepared_comm.push(cur.clone().into());
+            prepared_comm.push(cur.into());
             cur.double_in_place();
         }
 
-        Self { 0: prepared_comm }
+        Self(prepared_comm)
     }
 }
 

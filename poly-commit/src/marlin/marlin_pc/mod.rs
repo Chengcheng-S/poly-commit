@@ -49,7 +49,7 @@ pub(crate) fn shift_polynomial<E: Pairing, P: DenseUVPolynomial<E::ScalarField>>
 
         let mut shifted_polynomial_coeffs =
             vec![E::ScalarField::zero(); largest_enforced_degree_bound - degree_bound];
-        shifted_polynomial_coeffs.extend_from_slice(&p.coeffs());
+        shifted_polynomial_coeffs.extend_from_slice(p.coeffs());
         P::from_coefficients_vec(shifted_polynomial_coeffs)
     }
 }
@@ -107,10 +107,10 @@ where
 
         // Construct the core KZG10 verifier key.
         let vk = kzg10::VerifierKey {
-            g: pp.powers_of_g[0].clone(),
+            g: pp.powers_of_g[0],
             gamma_g: pp.powers_of_gamma_g[&0],
-            h: pp.h.clone(),
-            beta_h: pp.beta_h.clone(),
+            h: pp.h,
+            beta_h: pp.beta_h,
             prepared_h: pp.prepared_h.clone(),
             prepared_beta_h: pp.prepared_beta_h.clone(),
         };
@@ -158,7 +158,7 @@ where
             powers,
             shifted_powers,
             powers_of_gamma_g,
-            enforced_degree_bounds: enforced_degree_bounds,
+            enforced_degree_bounds,
             max_degree,
         };
 
@@ -198,15 +198,12 @@ where
             let hiding_bound = p.hiding_bound();
             let polynomial: &P = p.polynomial();
 
-            let enforced_degree_bounds: Option<&[usize]> = ck
-                .enforced_degree_bounds
-                .as_ref()
-                .map(|bounds| bounds.as_slice());
+            let enforced_degree_bounds: Option<&[usize]> = ck.enforced_degree_bounds.as_deref();
             kzg10::KZG10::<E, P>::check_degrees_and_bounds(
                 ck.supported_degree(),
                 ck.max_degree,
                 enforced_degree_bounds,
-                &p,
+                p,
             )?;
 
             let commit_time = start_timer!(|| format!(
@@ -224,7 +221,7 @@ where
                     .shifted_powers(degree_bound)
                     .ok_or(Error::UnsupportedDegreeBound(degree_bound))?;
                 let (shifted_comm, shifted_rand) =
-                    kzg10::KZG10::commit(&shifted_powers, &polynomial, hiding_bound, Some(rng))?;
+                    kzg10::KZG10::commit(&shifted_powers, polynomial, hiding_bound, Some(rng))?;
                 (Some(shifted_comm), Some(shifted_rand))
             } else {
                 (None, None)
@@ -270,15 +267,12 @@ where
             let degree_bound = polynomial.degree_bound();
             assert_eq!(degree_bound.is_some(), rand.shifted_rand.is_some());
 
-            let enforced_degree_bounds: Option<&[usize]> = ck
-                .enforced_degree_bounds
-                .as_ref()
-                .map(|bounds| bounds.as_slice());
+            let enforced_degree_bounds: Option<&[usize]> = ck.enforced_degree_bounds.as_deref();
             kzg10::KZG10::<E, P>::check_degrees_and_bounds(
                 ck.supported_degree(),
                 ck.max_degree,
                 enforced_degree_bounds,
-                &polynomial,
+                polynomial,
             )?;
 
             // compute next challenges challenge^j and challenge^{j+1}.
@@ -296,7 +290,7 @@ where
                     kzg10::KZG10::<E, P>::compute_witness_polynomial(
                         polynomial.polynomial(),
                         *point,
-                        &shifted_rand,
+                        shifted_rand,
                     )?;
                 let challenge_j_1 = sponge.squeeze_field_elements_with_sizes(&[CHALLENGE_SIZE])[0];
 
@@ -393,7 +387,7 @@ where
             &combined_comms,
             &combined_queries,
             &combined_evals,
-            &proof,
+            proof,
             rng,
         )?;
         end_timer!(proof_time);
@@ -474,7 +468,7 @@ where
         let poly_rand_comm: BTreeMap<_, _> = labeled_polynomials
             .into_iter()
             .zip(states)
-            .zip(commitments.into_iter())
+            .zip(commitments)
             .map(|((poly, r), comm)| (poly.label(), (poly, r, comm)))
             .collect();
 
@@ -527,7 +521,7 @@ where
         }
         end_timer!(open_time);
 
-        Ok(proofs.into())
+        Ok(proofs)
     }
 }
 

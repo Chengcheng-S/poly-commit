@@ -130,7 +130,7 @@ impl<'a, F: Field, P: Polynomial<F>> LabeledPolynomial<F, P> {
     ) -> Self {
         Self {
             label,
-            polynomial: polynomial,
+            polynomial,
             degree_bound,
             hiding_bound,
             _field: PhantomData,
@@ -306,7 +306,7 @@ impl<F: Field> LinearCombination<F> {
         let terms = terms.into_iter().map(|(c, t)| (c, t.into())).collect();
         Self {
             label: label.into(),
-            terms: terms,
+            terms,
         }
     }
 

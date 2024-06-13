@@ -196,7 +196,7 @@ where
             end_timer!(sample_random_poly_time);
         }
 
-        let random_ints = convert_to_bigints(&randomness.blinding_polynomial.coeffs());
+        let random_ints = convert_to_bigints(randomness.blinding_polynomial.coeffs());
         let msm_time = start_timer!(|| "MSM to compute commitment to random poly");
         let random_commitment = <E::G1 as VariableBaseMSM>::msm_bigint(
             &powers.powers_of_gamma_g,
@@ -265,7 +265,7 @@ where
             let blinding_evaluation = blinding_p.evaluate(&point);
             end_timer!(blinding_eval_time);
 
-            let random_witness_coeffs = convert_to_bigints(&hiding_witness_polynomial.coeffs());
+            let random_witness_coeffs = convert_to_bigints(hiding_witness_polynomial.coeffs());
             let witness_comm_time =
                 start_timer!(|| "Computing commitment to random witness polynomial");
             w += &<E::G1 as VariableBaseMSM>::msm_bigint(
@@ -422,11 +422,11 @@ where
         }
     }
 
-    pub(crate) fn check_degrees_and_bounds<'a>(
+    pub(crate) fn check_degrees_and_bounds(
         supported_degree: usize,
         max_degree: usize,
         enforced_degree_bounds: Option<&[usize]>,
-        p: &'a LabeledPolynomial<E::ScalarField, P>,
+        p: &LabeledPolynomial<E::ScalarField, P>,
     ) -> Result<(), Error> {
         if let Some(bound) = p.degree_bound() {
             let enforced_degree_bounds =

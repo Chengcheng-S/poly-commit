@@ -220,7 +220,7 @@ where
 
                     let degree_bounds_and_neg_powers_of_h = enforced_degree_bounds
                         .iter()
-                        .map(|bound| (*bound, neg_powers_of_h[&(max_degree - *bound)].clone()))
+                        .map(|bound| (*bound, neg_powers_of_h[&(max_degree - *bound)]))
                         .collect();
 
                     end_timer!(neg_powers_of_h_time);
@@ -253,8 +253,8 @@ where
         let h = pp.h;
         let beta_h = pp.beta_h;
         let gamma_g = pp.powers_of_gamma_g[&0];
-        let prepared_h = (&pp.prepared_h).clone();
-        let prepared_beta_h = (&pp.prepared_beta_h).clone();
+        let prepared_h = pp.prepared_h.clone();
+        let prepared_beta_h = pp.prepared_beta_h.clone();
 
         let vk = VerifierKey {
             g,
@@ -293,16 +293,13 @@ where
         let mut randomness: Vec<Self::CommitmentState> = Vec::new();
 
         for labeled_polynomial in polynomials {
-            let enforced_degree_bounds: Option<&[usize]> = ck
-                .enforced_degree_bounds
-                .as_ref()
-                .map(|bounds| bounds.as_slice());
+            let enforced_degree_bounds: Option<&[usize]> = ck.enforced_degree_bounds.as_deref();
 
             kzg10::KZG10::<E, P>::check_degrees_and_bounds(
                 ck.supported_degree(),
                 ck.max_degree,
                 enforced_degree_bounds,
-                &labeled_polynomial,
+                labeled_polynomial,
             )?;
 
             let polynomial: &P = labeled_polynomial.polynomial();
@@ -359,16 +356,13 @@ where
         let mut curr_challenge = sponge.squeeze_field_elements_with_sizes(&[CHALLENGE_SIZE])[0];
 
         for (polynomial, state) in labeled_polynomials.into_iter().zip(states) {
-            let enforced_degree_bounds: Option<&[usize]> = ck
-                .enforced_degree_bounds
-                .as_ref()
-                .map(|bounds| bounds.as_slice());
+            let enforced_degree_bounds: Option<&[usize]> = ck.enforced_degree_bounds.as_deref();
 
             kzg10::KZG10::<E, P>::check_degrees_and_bounds(
                 ck.supported_degree(),
                 ck.max_degree,
                 enforced_degree_bounds,
-                &polynomial,
+                polynomial,
             )?;
 
             combined_polynomial += (curr_challenge, polynomial.polynomial());
@@ -579,7 +573,7 @@ where
             ck,
             lc_polynomials.iter(),
             lc_commitments.iter(),
-            &query_set,
+            query_set,
             sponge,
             lc_states.iter(),
             rng,
@@ -620,7 +614,7 @@ where
 
             for (coeff, label) in lc.iter() {
                 if label.is_one() {
-                    for (&(ref label, _), ref mut eval) in evaluations.iter_mut() {
+                    for ((label, _), ref mut eval) in evaluations.iter_mut() {
                         if label == &lc_label {
                             **eval -= coeff;
                         }
@@ -662,7 +656,7 @@ where
         Self::batch_check(
             vk,
             &lc_commitments,
-            &eqn_query_set,
+            eqn_query_set,
             &evaluations,
             proof,
             sponge,

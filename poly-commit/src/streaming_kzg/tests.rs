@@ -221,7 +221,7 @@ fn test_open_multi_points() {
         &[beta.square(), beta, -beta],
         max_msm_buffer,
     );
-    let evaluation_remainder = evaluate_be(&remainder, &beta);
+    let evaluation_remainder = evaluate_be(remainder, &beta);
     assert_eq!(evaluation_remainder, Fr::from(1807299544171u64));
 
     let (remainder, _commitment) =

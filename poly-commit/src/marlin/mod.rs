@@ -213,7 +213,7 @@ where
         let combined_comms_affine = E::G1::normalize_batch(&combined_comms);
         let combined_comms = combined_comms_affine
             .into_iter()
-            .map(|c| kzg10::Commitment(c.into()))
+            .map(|c| kzg10::Commitment(c))
             .collect::<Vec<_>>();
         end_timer!(norm_time);
         Ok((combined_comms, combined_queries, combined_evals))
@@ -308,7 +308,7 @@ where
             ck,
             lc_polynomials.iter(),
             lc_commitments.iter(),
-            &query_set,
+            query_set,
             sponge,
             lc_states.iter(),
             rng,
@@ -360,7 +360,7 @@ where
 
             for (coeff, label) in lc.iter() {
                 if label.is_one() {
-                    for (&(ref label, _), ref mut eval) in evaluations.iter_mut() {
+                    for ((label, _), ref mut eval) in evaluations.iter_mut() {
                         if label == &lc_label {
                             **eval -= coeff;
                         }
@@ -402,7 +402,7 @@ where
         PC::batch_check(
             vk,
             &lc_commitments,
-            &query_set,
+            query_set,
             &evaluations,
             proof,
             sponge,

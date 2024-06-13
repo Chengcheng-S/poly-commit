@@ -141,9 +141,9 @@ where
     }
 
     /// The batch commitment procedures, that takes as input a committer key and the streaming coefficients of a list of polynomials, and produces the desired commitments.
-    pub fn batch_commit<'a, F>(
+    pub fn batch_commit<F>(
         &self,
-        polynomials: &[&'a dyn Iterable<Item = F, Iter = &mut dyn Iterator<Item = F>>],
+        polynomials: &[&dyn Iterable<Item = F, Iter = &mut dyn Iterator<Item = F>>],
     ) -> Vec<Commitment<E>>
     where
         F: Borrow<E::ScalarField>,
@@ -194,9 +194,9 @@ where
     /// The algorithm takes advantage of the tree structure of folding polynomials in our protocol. Please refer to our paper for more details.
     /// The function evaluates all the folding polynomials at a set of evaluation points `points` and produces a single batched evaluation proof.
     /// `eta` is the random challenge for batching folding polynomials.
-    pub fn open_folding<'a, SF>(
+    pub fn open_folding<SF>(
         &self,
-        polynomials: FoldedPolynomialTree<'a, E::ScalarField, SF>,
+        polynomials: FoldedPolynomialTree<'_, E::ScalarField, SF>,
         points: &[E::ScalarField],
         etas: &[E::ScalarField],
         max_msm_buffer: usize,

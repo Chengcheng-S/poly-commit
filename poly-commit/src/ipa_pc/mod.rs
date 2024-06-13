@@ -82,7 +82,7 @@ where
         while challenge.is_none() {
             let mut hash_input = bytes.to_vec();
             hash_input.extend(i.to_le_bytes());
-            let hash = D::digest(&hash_input.as_slice());
+            let hash = D::digest(hash_input.as_slice());
             challenge = <G::ScalarField as Field>::from_random_bytes(&hash);
 
             i += 1;
@@ -197,8 +197,8 @@ where
         let h_prime = h_prime.into_affine();
 
         let check_commitment_elem: G::Group = Self::cm_commit(
-            &[proof.final_comm_key.clone(), h_prime],
-            &[proof.c.clone(), v_prime],
+            &[proof.final_comm_key, h_prime],
+            &[proof.c, v_prime],
             None,
             None,
         );
@@ -243,7 +243,7 @@ where
         } else {
             let mut shifted_polynomial_coeffs =
                 vec![G::ScalarField::zero(); ck.supported_degree() - degree_bound];
-            shifted_polynomial_coeffs.extend_from_slice(&p.coeffs());
+            shifted_polynomial_coeffs.extend_from_slice(p.coeffs());
             P::from_coefficients_vec(shifted_polynomial_coeffs)
         }
     }
@@ -282,21 +282,21 @@ where
         let mut commitments = Vec::new();
 
         let mut i = 0;
-        for info in lc_info.into_iter() {
+        for info in lc_info.iter() {
             let commitment;
             let label = info.0.clone();
             let degree_bound = info.1;
 
             if degree_bound.is_some() {
                 commitment = Commitment {
-                    comm: comms[i].clone(),
-                    shifted_comm: Some(comms[i + 1].clone()),
+                    comm: comms[i],
+                    shifted_comm: Some(comms[i + 1]),
                 };
 
                 i += 2;
             } else {
                 commitment = Commitment {
-                    comm: comms[i].clone(),
+                    comm: comms[i],
                     shifted_comm: None,
                 };
 
@@ -306,7 +306,7 @@ where
             commitments.push(LabeledCommitment::new(label, commitment, degree_bound));
         }
 
-        return commitments;
+        commitments
     }
 
     fn sample_generators(num_generators: usize) -> Vec<G> {
@@ -393,15 +393,15 @@ where
 
         let ck = CommitterKey {
             comm_key: pp.comm_key[0..(supported_degree + 1)].to_vec(),
-            h: pp.h.clone(),
-            s: pp.s.clone(),
+            h: pp.h,
+            s: pp.s,
             max_degree: pp.max_degree(),
         };
 
         let vk = VerifierKey {
             comm_key: pp.comm_key[0..(supported_degree + 1)].to_vec(),
-            h: pp.h.clone(),
-            s: pp.s.clone(),
+            h: pp.h,
+            s: pp.s,
             max_degree: pp.max_degree(),
         };
 
@@ -454,7 +454,7 @@ where
 
             let comm = Self::cm_commit(
                 &ck.comm_key[..(polynomial.degree() + 1)],
-                &polynomial.coeffs(),
+                polynomial.coeffs(),
                 Some(ck.s),
                 Some(state.rand),
             )
@@ -463,7 +463,7 @@ where
             let shifted_comm = degree_bound.map(|d| {
                 Self::cm_commit(
                     &ck.comm_key[(ck.supported_degree() - d)..],
-                    &polynomial.coeffs(),
+                    polynomial.coeffs(),
                     Some(ck.s),
                     state.shifted_rand,
                 )
@@ -963,7 +963,7 @@ where
             ck,
             lc_polynomials.iter(),
             lc_commitments.iter(),
-            &query_set,
+            query_set,
             sponge,
             lc_states.iter(),
             rng,
@@ -1005,7 +1005,7 @@ where
 
             for (coeff, label) in lc.iter() {
                 if label.is_one() {
-                    for (&(ref label, _), ref mut eval) in evaluations.iter_mut() {
+                    for ((label, _), ref mut eval) in evaluations.iter_mut() {
                         if label == &lc_label {
                             **eval -= coeff;
                         }
@@ -1050,7 +1050,7 @@ where
         Self::batch_check(
             vk,
             &lc_commitments,
-            &eqn_query_set,
+            eqn_query_set,
             &evaluations,
             proof,
             sponge,
